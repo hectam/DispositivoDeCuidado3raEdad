@@ -1,0 +1,193 @@
+https://github.com/hectam/siso1Proyectos.git
+https://www.youtube.com/watch?v=RAtoM6pxUvY
+https://pulsesensor.com/pages/pulse-sensor-servo-tutorial
+https://www.instructables.com/Pulse-Sensor-With-Arduino-Tutorial/
+https://circuitdigest.com/microcontroller-projects/sending-arduino-data-to-webpage
+https://www.elithecomputerguy.com/2019/07/write-post-data-to-server-with-arduino-uno-with-wifi/
+https://create.arduino.cc/projecthub/SurtrTech/contactless-temperature-sensor-mlx90614-1e7bc7
+https://www.makerblog.at/2019/02/beschleunigungssensor-adxl335-ein-accelerometer-am-arduino/
+https://www.youtube.com/watch?v=z_rPvQhKTfY&feature=emb_logo
+https://www.youtube.com/watch?v=32VcKyI0dio
+https://www.youtube.com/watch?v=0iNoJzhLny0&feature=emb_logo
+
+
+/* This code works with MLX90614 (GY906) and LCD ic screen
+ * It measures both ambient and object temperature in Celsius and display it on the screen
+ * Please visit www.surtrtech.com for more details
+ */
+
+#include <LiquidCrystal_I2C.h>
+#include <Wire.h>
+#include <Adafruit_MLX90614.h>
+
+#define I2C_ADDR 0x27 //I2C adress, you should use the code to scan the adress first (0x27) here
+#define BACKLIGHT_PIN 3 // Declaring LCD Pins
+#define En_pin 2
+#define Rw_pin 1
+#define Rs_pin 0
+#define D4_pin 4
+#define D5_pin 5
+#define D6_pin 6
+#define D7_pin 7
+
+LiquidCrystal_I2C lcd(I2C_ADDR,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin);
+Adafruit_MLX90614 mlx = Adafruit_MLX90614();
+
+void setup() {
+  
+  mlx.begin();
+  lcd.begin (16,2);
+  lcd.setBacklightPin(BACKLIGHT_PIN,POSITIVE);
+  lcd.setBacklight(HIGH); //Lighting backlight
+  lcd.home ();
+
+}
+
+void loop() {
+ lcd.setCursor(0,0);
+ lcd.print("Ambient ");
+ lcd.print(mlx.readAmbientTempC());
+ lcd.print(" C");
+ 
+ lcd.setCursor(0,1);
+ lcd.print("Target  ");
+ lcd.print(mlx.readObjectTempC());
+ lcd.print(" C");
+
+ delay(1000);
+
+}
+
+#include <WiFiNINA.h>
+
+#define sensorPin A5
+
+char ssid[] = "test";
+char pass[] = "";
+
+int status = WL_IDLE_STATUS;
+
+char server[] = "www.elithecomputerguy.com";
+
+String postData;
+String postVariable = "temp=";
+
+WiFiClient client;
+
+void setup() {
+
+  Serial.begin(9600);
+
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to Network named: ");
+    Serial.println(ssid);
+    status = WiFi.begin(ssid, pass);
+    delay(10000);
+  }
+
+  Serial.print("SSID: ");
+  Serial.println(WiFi.SSID());
+  IPAddress ip = WiFi.localIP();
+  IPAddress gateway = WiFi.gatewayIP();
+  Serial.print("IP Address: ");
+  Serial.println(ip);
+}
+
+void loop() {
+  int reading = analogRead(sensorPin);
+  float voltage = reading * 5.0;
+  voltage /= 1024.0;
+  float temperatureC = (voltage - 0.5) * 100 ;
+  float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
+
+  postData = postVariable + temperatureF;
+
+  if (client.connect(server, 80)) {
+    client.println("POST /test/post.php HTTP/1.1");
+    client.println("Host: www.elithecomputerguy.com");
+    client.println("Content-Type: application/x-www-form-urlencoded");
+    client.print("Content-Length: ");
+    client.println(postData.length());
+    client.println();
+    client.print(postData);
+  }
+
+  if (client.connected()) {
+    client.stop();
+  }
+  Serial.println(postData);
+
+  delay(3000);
+}
+
+<?php
+$time = time();
+$tempF = $_POST["temp"];
+$file = 'temp.html';
+$data = $time."  -  ".$tempF;
+file_put_contents($file, $data);
+?>
+
+void setup(){
+Serial.begin(9600);
+}
+
+void loop(){
+
+ xA = analogRead(A0);
+ yA = analogRead(A1);
+ zA = analogRead(A2);
+
+ Serial.print(xA);
+ Serial.print(",");
+ Serial.print(yA);
+ Serial.print(",");
+ Serial.print(zA);
+ delay(20);
+
+}
+
+#define USE_ARDUINO_INTERRUPTS true    // Set-up low-level interrupts for most acurate BPM math.
+#include <PulseSensorPlayground.h>     // Includes the PulseSensorPlayground Library.   
+
+//  Variables
+const int PulseWire = 0;       // PulseSensor PURPLE WIRE connected to ANALOG PIN 0
+const int LED13 = 13;          // The on-board Arduino LED, close to PIN 13.
+int Threshold = 550;           // Determine which Signal to "count as a beat" and which to ignore.
+                               // Use the "Gettting Started Project" to fine-tune Threshold Value beyond default setting.
+                               // Otherwise leave the default "550" value. 
+                               
+PulseSensorPlayground pulseSensor;  // Creates an instance of the PulseSensorPlayground object called "pulseSensor"
+
+
+void setup() {   
+
+  Serial.begin(9600);          // For Serial Monitor
+
+  // Configure the PulseSensor object, by assigning our variables to it. 
+  pulseSensor.analogInput(PulseWire);   
+  pulseSensor.blinkOnPulse(LED13);       //auto-magically blink Arduino's LED with heartbeat.
+  pulseSensor.setThreshold(Threshold);   
+
+  // Double-check the "pulseSensor" object was created and "began" seeing a signal. 
+   if (pulseSensor.begin()) {
+    Serial.println("We created a pulseSensor Object !");  //This prints one time at Arduino power-up,  or on Arduino reset.  
+  }
+}
+
+
+
+void loop() {
+
+ int myBPM = pulseSensor.getBeatsPerMinute();  // Calls function on our pulseSensor object that returns BPM as an "int".
+                                               // "myBPM" hold this BPM value now. 
+
+if (pulseSensor.sawStartOfBeat()) {            // Constantly test to see if "a beat happened". 
+ Serial.println("♥  A HeartBeat Happened ! "); // If test is "true", print a message "a heartbeat happened".
+ Serial.print("BPM: ");                        // Print phrase "BPM: " 
+ Serial.println(myBPM);                        // Print the value inside of myBPM. 
+}
+
+  delay(20);                    // considered best practice in a simple sketch.
+
+}
